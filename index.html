@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iron Fx Recovery</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- TradingView Widget -->
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <style>
+    /* Incluye estilos avanzados para todo el sistema aquí (menu, panel, admin, trading, etc) */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #090909;
+      color: #fff;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .main-container { flex: 1; display: flex; min-height: 0; }
+    aside {
+      width: 200px;
+      background: #18191a;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      min-height: 100vh;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 10;
+      border-right: 1px solid #272727;
+    }
+    .sidebar-logo { padding: 32px 0 16px 0; text-align: center; }
+    .sidebar-logo img { width: 90px; border-radius: 20px; }
+    nav.sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 0;
+    }
+    nav.sidebar-nav button, nav.sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: #fff;
+      text-align: left;
+      font-size: 1.07em;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.18s, color 0.18s, border-color 0.2s;
+      outline: none;
+      border-radius: 0 16px 16px 0;
+      font-weight: bold;
+    }
+    nav.sidebar-nav button.active, nav.sidebar-nav a.active {
+      background: #232629;
+      border-left: 3px solid #ff0000;
+      color: #ff0000;
+    }
+    nav.sidebar-nav button:hover:not(.active), nav.sidebar-nav a:hover:not(.active) {
+      background: #232323;
+      color: #ff6363;
+    }
+    .logout-btn {
+      margin: 20px 20px 20px 20px;
+      align-self: flex-end;
+      width: auto;
+      padding: 5px 16px;
+      font-size: 0.95em;
+      background: #232323;
+      color: #ff6363;
+      border: 1px solid #444;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .logout-btn:hover { background: #ff0000; color: #fff; }
+    header {
+      background: #ff0000;
+      text-align: center;
+      padding: 14px 0 12px 200px;
+      font-size: 1.45em;
+      font-weight: bold;
+      letter-spacing: .5px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .content {
+      margin-left: 200px;
+      max-width: 900px;
+      width: 100%;
+      min-height: 80vh;
+      padding: 40px 24px 20px 24px;
+      box-sizing: border-box;
+      display: block;
+    }
+    .panel {
+      background: #151516;
+      border-radius: 18px;
+      box-shadow: 0 2px 30px #22000022;
+      padding: 28px 24px;
+      max-width: 400px;
+      margin: auto;
+      margin-bottom: 24px;
+    }
+    .panel h2 {
+      margin-top: 0;
+      color: #ff0000;
+      letter-spacing: .5px;
+    }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 1em; margin-bottom: 2px; color: #eee; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      background-color: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+    .panel button, .panel input[type="submit"] {
+      background-color: #ff0000;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: background 0.18s;
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 0;
+      font-size: 1.09em;
+    }
+    .panel button:hover, .panel input[type="submit"]:hover {
+      background-color: #d10000;
+    }
+    .msg { margin-top: 10px; font-size: 1em; text-align: center; }
+    .msg.success { color: #0f0; }
+    .msg.error { color: #f00; }
+    .users-table, .operations-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+    .users-table th, .users-table td, .operations-table th, .operations-table td {
+      border: 1px solid #292929;
+      padding: 8px 5px;
+      text-align: left;
+      font-size: .97em;
+    }
+    .users-table th, .operations-table th {
+      background: #2c2c2c;
+      color: #ff6363;
+    }
+    .users-table tr:nth-child(even), .operations-table tr:nth-child(even) {
+      background: #191919;
+    }
+    .users-table tr.approved { background: #123c12; color: #92ffa1; }
+    .users-table tr.rejected { background: #3c1212; color: #ffa192; }
+    .admin-actions button {
+      margin-right: 8px;
+      margin-bottom: 2px;
+      width: auto;
+      padding: 5px 12px;
+      font-size: .95em;
+      background: #232323;
+      color: #fff;
+      border-radius: 7px;
+      border: 1px solid #444;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      outline: none;
+    }
+    .admin-actions button.approve { color: #0f0; border-color: #0f0; }
+    .admin-actions button.reject { color: #f00; border-color: #f00; }
+    .admin-actions button:hover { background: #ff0000; color: #fff; }
+    .trading-board {
+      background: #191e20;
+      border-radius: 20px;
+      box-shadow: 0 2px 12px #2226;
+      padding: 20px;
+      margin-bottom: 18px;
+      max-width: 900px;
+      margin: auto;
+      margin-bottom: 30px;
+    }
+    .trading-board .price {
+      font-size: 2.1em;
+      margin-bottom: 10px;
+      font-family: 'Courier New', monospace;
+    }
+    .trading-board .price.up { color: #0f0; }
+    .trading-board .price.down { color: #f00; }
+    .trading-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+    .trading-actions button {
+      width: 120px !important;
+      padding: 12px 0 !important;
+      border-radius: 10px;
+      font-size: 1.15em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      transition: background 0.18s;
+    }
+    .btn-buy { background: #0c0; color: #fff; }
+    .btn-buy:hover { background: #19a819; }
+    .btn-sell { background: #f00; color: #fff; }
+    .btn-sell:hover { background: #b40000; }
+    .operations-panel {
+      background: #181919;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #2226;
+      margin: 0 auto 18px auto;
+      padding: 20px;
+      max-width: 900px;
+    }
+    .operations-panel h3 { margin: 0 0 10px 0; color: #ff6363; font-size: 1.1em; }
+    .operations-table th, .operations-table td { text-align: center; }
+    .operations-table tr.buy {background: #122c12;}
+    .operations-table tr.sell {background: #2c1212;}
+    .operations-table tr.closed {opacity: .65;}
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      background: #17181a;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 12px 0 8px 0;
+      z-index: 99;
+      border-top: 1px solid #333;
+    }
+    .bottom-bar button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.15em;
+      padding: 6px 17px;
+      border-radius: 9px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: background 0.12s, color 0.12s;
+      font-weight: bold;
+    }
+    .bottom-bar button.active, .bottom-bar button:focus {
+      background: #232323;
+      color: #ff0000;
+    }
+    .bottom-bar button:hover:not(.active) {
+      background: #222;
+      color: #ff6363;
+    }
+    .bottom-bar i { font-size: 1.32em; }
+    .lang-select {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      z-index: 100;
+      background: #232323;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 7px;
+      padding: 4px 12px;
+      font-size: .95em;
+      cursor: pointer;
+    }
+    .notify {
+      position: fixed;
+      top: 90px;
+      right: 30px;
+      background: #232323;
+      color: #fff;
+      border: 2px solid #ff0000;
+      padding: 14px 23px;
+      border-radius: 14px;
+      z-index: 9999;
+      font-size: 1.09em;
+      box-shadow: 0 2px 9px #0004;
+      display: none;
+      min-width: 180px;
+      text-align: center;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    .download-report-btn {
+      margin: 10px 0 10px 0;
+      background: #222;
+      color: #ff0000;
+      border: 1px solid #ff0000;
+      border-radius: 7px;
+      padding: 7px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-weight: bold;
+    }
+    .download-report-btn:hover {
+      background: #ff0000;
+      color: #fff;
+    }
+    @media (max-width: 700px) {
+      aside { width: 56px; }
+      .sidebar-logo img { width: 38px; }
+      .sidebar-logo { padding: 16px 0 9px 0; }
+      nav.sidebar-nav button, nav.sidebar-nav a {
+        font-size: 0.92em;
+        padding: 12px 8px;
+        border-radius: 0 9px 9px 0;
+        gap: 5px;
+      }
+      .content { margin-left: 56px; padding: 16px 5px 75px 5px; }
+      header { padding-left: 56px; font-size: 1em; }
+      .trading-board, .operations-panel { max-width: 97vw; }
+      .panel { max-width: 97vw; }
+    }
+    @media (max-width: 480px) {
+      .bottom-bar button span {display:none;}
+      .bottom-bar button i {font-size:1.2em;}
+    }
+  </style>
+</head>
+<body>
+<select class="lang-select" id="lang-select">
+  <option value="es">ES</option>
+  <option value="en">EN</option>
+</select>
+<div class="notify" id="notify"></div>
+<aside id="sidebar" style="display:none;">
+  <div class="sidebar-logo">
+    <img src="icon-192.png" alt="Iron FX Logo">
+  </div>
+  <nav class="sidebar-nav" id="nav-menu">
+    <button type="button" data-section="trading"><i class="fa-solid fa-chart-line"></i> <span class="i-trading"></span></button>
+    <button type="button" data-section="admin" id="adminPanelBtn" style="display:none;"><i class="fa-solid fa-user-shield"></i> <span class="i-admin"></span></button>
+  </nav>
+  <button id="logout-btn" class="logout-btn" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
+</aside>
+<header>
+  <span class="i-header"></span>
+</header>
+<main class="main-container">
+  <section class="content" id="content-area">
+    <div id="login-panel" class="panel" style="max-width:430px;">
+      <h2 class="i-login"></h2>
+      <form id="form-login">
+        <div class="form-group">
+          <label for="login-email" class="i-email"></label>
+          <input type="email" id="login-email" placeholder="ejemplo@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password" class="i-pass"></label>
+          <input type="password" id="login-password" placeholder="********" required>
+        </div>
+        <button type="submit" class="i-login-btn"></button>
+        <div class="msg" id="login-msg"></div>
+      </form>
+      <div style="margin-top:12px;text-align:center;">
+        <small><span class="i-noaccount"></span> <a href="#" id="show-register" style="color:#ff6363;cursor:pointer;" class="i-register-link"></a></small>
+      </div>
+    </div>
+    <div id="register-panel" class="panel" style="display:none;max-width:430px;">
+      <h2 class="i-register"></h2>
+      <form id="form-register">
+        <div class="form-group">
+          <label for="reg-email" class="i-email"></label>
+          <input type="email" id="reg-email" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-password" class="i-pass"></label>
+          <input type="password" id="reg-password" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-nombre" class="i-name"></label>
+          <input type="text" id="reg-nombre" required>
+        </div>
+        <button type="submit" class="i-register-btn"></button>
+        <div class="msg" id="register-msg"></div>
+      </form>
+      <div style="margin-top:12px;text-align:center;">
+        <small><span class="i-haveaccount"></span> <a href="#" id="show-login" style="color:#ff6363;cursor:pointer;" class="i-login-link"></a></small>
+      </div>
+    </div>
+    <div id="trading" style="display:none;">
+      <div class="trading-board" style="max-width:900px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:bold;font-size:1.1em;" id="trading-symbol">EUR/USD</span>
+          </div>
+          <div id="simu-balance" style="font-size:1em;color:#44ff44;font-weight:bold;">Balance: $10000</div>
+        </div>
+        <div id="tvchart" style="height:300px;"></div>
+        <div class="trading-actions" style="margin-top:22px;">
+          <input type="number" id="simu-amount" value="1" min="0.01" step="0.01" style="width:110px;">
+          <button class="btn-buy" id="btnBuy"><i class="fa-solid fa-arrow-up"></i> <span class="i-buy"></span></button>
+          <button class="btn-sell" id="btnSell"><i class="fa-solid fa-arrow-down"></i> <span class="i-sell"></span></button>
+        </div>
+      </div>
+      <div class="operations-panel" style="max-width:900px;">
+        <h3 class="i-openops"></h3>
+        <button class="download-report-btn" id="download-ops"><i class="fa-solid fa-download"></i> <span class="i-download"></span></button>
+        <table class="operations-table" id="operations-table">
+          <thead>
+            <tr>
+              <th class="i-type"></th>
+              <th class="i-price"></th>
+              <th class="i-amount"></th>
+              <th class="i-pl"></th>
+              <th class="i-action"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="panel" style="max-width:900px;">
+        <h2 class="i-depwith"></h2>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <form id="form-deposito" style="flex:1;min-width:320px;">
+            <h3 class="i-deposit"></h3>
+            <div class="form-group">
+              <label for="dep-method" class="i-method"></label>
+              <select id="dep-method" required></select>
+            </div>
+            <div class="form-group">
+              <label for="pais-deposito" class="i-country"></label>
+              <select id="pais-deposito" required>
+                <option value="">--</option>
+                <option>Colombia</option>
+                <option>Perú</option>
+                <option>México</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="monto-deposito" class="i-amount"></label>
+              <input type="number" id="monto-deposito" placeholder="Ej: 100" min="1" required>
+            </div>
+            <button type="submit"><i class="fa-solid fa-circle-plus"></i> <span class="i-deposit-btn"></span></button>
+            <div class="msg" id="deposito-msg"></div>
+          </form>
+          <form id="form-retiro" style="flex:1;min-width:320px;">
+            <h3 class="i-withdraw"></h3>
+            <div class="form-group">
+              <label for="ret-method" class="i-method"></label>
+              <select id="ret-method" required></select>
+            </div>
+            <div class="form-group">
+              <label for="banco" class="i-bank"></label>
+              <input type="text" id="banco" required>
+            </div>
+            <div class="form-group">
+              <label for="cuenta" class="i-account"></label>
+              <input type="text" id="cuenta" required>
+            </div>
+            <div class="form-group">
+              <label for="pais-retiro" class="i-country"></label>
+              <select id="pais-retiro" required>
+                <option value="">--</option>
+                <option>Colombia</option>
+                <option>Perú</option>
+                <option>México</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="monto-retiro" class="i-amount"></label>
+              <input type="number" id="monto-retiro" placeholder="Ej: 50" min="1" required>
+            </div>
+            <button type="submit"><i class="fa-solid fa-circle-minus"></i> <span class="i-withdraw-btn"></span></button>
+            <div class="msg" id="retiro-msg"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="admin" style="display:none;">
+      <div class="panel" style="max-width:900px;">
+        <h2 class="i-admin-panel"></h2>
+        <div>
+          <h3 class="i-users"></h3>
+          <table class="users-table" id="admin-users-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th class="i-name"></th>
+                <th class="i-balance"></th>
+                <th class="i-status"></th>
+                <th class="i-action"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <button class="download-report-btn" id="download-users"><i class="fa-solid fa-download"></i> <span class="i-download-users"></span></button>
+        </div>
+        <div style="margin-top:32px;">
+          <h3 class="i-methods"></h3>
+          <form id="form-methods" style="display:flex;gap:16px;">
+            <input type="text" id="method-name" placeholder="Nombre/Name" required style="flex:1;">
+            <button type="submit" style="flex:0 0 auto;"><span class="i-add"></span></button>
+          </form>
+          <ul id="method-list" style="list-style:none;padding:0;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;"></ul>
+        </div>
+        <div class="msg" id="admin-msg"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>
+  &copy; 2025 Iron Fx Recovery. Todos los derechos reservados.
+</footer>
+<div class="bottom-bar" id="bottom-bar" style="display:none;">
+  <button type="button" id="bottom-tab-trading" class="active"><i class="fa-solid fa-chart-line"></i> <span class="i-trading"></span></button>
+  <button type="button" id="bottom-tab-deposit"><i class="fa-solid fa-circle-plus"></i> <span class="i-deposit"></span></button>
+  <button type="button" id="bottom-tab-withdraw"><i class="fa-solid fa-circle-minus"></i> <span class="i-withdraw"></span></button>
+</div>
+<script src="trading-platform-full.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('Service Worker registrado', reg))
+      .catch(err => console.error('Error registrando SW', err));
+  }
+</script>
+</body>
+</html>
