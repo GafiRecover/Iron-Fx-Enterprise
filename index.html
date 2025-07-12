@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iron Fx Recovery</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <h1>Iron Fx Recovery</h1>
+</header>
+
+<nav>
+  <a href="#login">Iniciar Sesión</a>
+  <a href="#trading">Trading</a>
+  <a href="#deposito">Depósito</a>
+  <a href="#retiro">Retiro</a>
+</nav>
+
+<section id="login">
+  <div class="panel">
+    <h2>Login</h2>
+    <form id="form-login">
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" placeholder="ejemplo@correo.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" placeholder="********" required>
+      </div>
+      <button type="submit">Entrar</button>
+      <div id="login-msg" class="msg"></div>
+    </form>
+  </div>
+</section>
+
+<section id="trading">
+  <div class="panel">
+    <h2>Trading</h2>
+    <p>Aquí irá el gráfico de TradingView embebido.</p>
+    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=es#%7B%7D" width="100%" height="300" frameborder="0"></iframe>
+  </div>
+</section>
+
+<section id="deposito">
+  <div class="panel">
+    <h2>Depósito</h2>
+    <form id="form-deposito">
+      <div class="form-group">
+        <label for="pais-deposito">Selecciona tu país</label>
+        <select id="pais-deposito" required>
+          <option value="">--Selecciona--</option>
+          <option>Colombia</option>
+          <option>Perú</option>
+          <option>México</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="monto-deposito">Monto a depositar (USD)</label>
+        <input type="number" id="monto-deposito" placeholder="Ej: 100" min="1" required>
+      </div>
+      <button type="submit">Depositar</button>
+      <div id="deposito-msg" class="msg"></div>
+    </form>
+  </div>
+</section>
+
+<section id="retiro">
+  <div class="panel">
+    <h2>Retiro</h2>
+    <form id="form-retiro">
+      <div class="form-group">
+        <label for="banco">Banco</label>
+        <input type="text" id="banco" placeholder="Nombre del banco" required>
+      </div>
+      <div class="form-group">
+        <label for="pais-retiro">País</label>
+        <select id="pais-retiro" required>
+          <option value="">--Selecciona--</option>
+          <option>Colombia</option>
+          <option>Perú</option>
+          <option>México</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="cuenta">Cuenta o tarjeta</label>
+        <input type="text" id="cuenta" placeholder="Número de cuenta o tarjeta" required>
+      </div>
+      <div class="form-group">
+        <label for="monto-retiro">Monto a retirar (USD)</label>
+        <input type="number" id="monto-retiro" placeholder="Ej: 50" min="1" required>
+      </div>
+      <button type="submit">Solicitar Retiro</button>
+      <div id="retiro-msg" class="msg"></div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  &copy; 2025 Iron Fx Recovery. Todos los derechos reservados.
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
